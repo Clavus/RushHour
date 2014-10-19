@@ -30,11 +30,11 @@ namespace RushHour
         unknown
     }
 
-    class GameState
+    struct GameSnapshot
     {
         public readonly byte[] carPositions;
 
-        public GameState(int numCars)
+        public GameSnapshot(int numCars)
         {
             carPositions = new byte[numCars];
         }
@@ -67,7 +67,7 @@ namespace RushHour
         // stores references to all cars that might at one point be present at a cell
         public readonly List<CarInfo>[,] cellPossibleCars;
         // the state of the game at starting positions
-        public readonly GameState startingState;
+        public readonly GameSnapshot startingState;
 
         // helper class used during construction
         private class CarStart
@@ -121,7 +121,7 @@ namespace RushHour
                 }
 
             cars = new CarInfo[carStarts.Count];
-            startingState = new GameState(carStarts.Count);
+            startingState = new GameSnapshot(carStarts.Count);
 
             byte targetIndex = 255;
             byte index = 0;
@@ -164,7 +164,7 @@ namespace RushHour
         }
 
         // Debug writing of the contents of the map at the specified state
-        public string ToString(GameState gameState)
+        public string ToString(GameSnapshot gameState)
         {
             char[,] map = new char[mapSize.x, mapSize.y];
             for (int x = 0; x < mapSize.x; ++x)
