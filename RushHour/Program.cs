@@ -6,7 +6,9 @@ namespace RushHour
     {
         static void Main(string[] args)
         {
-            Input input = Input.test(OutputMode.Verbose, false);
+            //Input input = Input.test_drie(OutputMode.Pretty, false);
+            //Input input = Input.test_st(OutputMode.Pretty, false);
+            Input input = Input.test_fifty(OutputMode.Pretty, false);
             //Input input = Input.ReadFromConsole();
 
             //Console.WriteLine(input.gameData);

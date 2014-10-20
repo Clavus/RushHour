@@ -81,7 +81,7 @@ namespace RushHour
         {
             if (solvedState != null)
             {
-                if (mode == OutputMode.Verbose)
+                if (mode == OutputMode.Pretty)
                 {
                     Stack<GameState> solvedStack = new Stack<GameState>();
                     GameState state = solvedState;
@@ -92,10 +92,11 @@ namespace RushHour
                     }
                     while (state != null);
                     int steps = solvedStack.Count - 1;
+                    int i = 0;
                     while (solvedStack.Count > 0)
                     {
                         Console.Clear();
-                        Console.WriteLine("Steps taken: " + steps);
+                        Console.WriteLine("Steps: " + (i++) + "/" + steps);
                         Console.WriteLine();
                         Console.WriteLine(gameData.ToString(solvedStack.Pop()));
                         Thread.Sleep(500);
@@ -155,8 +156,19 @@ namespace RushHour
 
         public void TestSolved(CarInfo car, GameState state)
         {
-            if (!IsSolved && car.carID == 'x' && IsOccupying(gameData.goalPoint.y, gameData.goalPoint.x, state, car))
-                solvedState = state;
+            if (!IsSolved && car.carID == 'x')
+            {
+                if (car.laneOrientation == Orientation.horizontal)
+                {
+                    if (state.carPositions[car.carArrayIndex] == gameData.goalPoint.y)
+                        solvedState = state;
+                }
+                else
+                {
+                    if (state.carPositions[car.carArrayIndex] == gameData.goalPoint.x)
+                        solvedState = state;
+                }
+            }
         }
     }
 

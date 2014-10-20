@@ -6,7 +6,7 @@ namespace RushHour
     {
         Count = 0,
         Solve = 1, 
-        Verbose = 2
+        Pretty = 2
     }
 
     class Input
@@ -36,8 +36,24 @@ namespace RushHour
 
             return new Input(m, goal, useAstar, map);
         }
+        
+        public static Input test_drie(OutputMode outputMode, bool useAstar)
+        {
+            string[] map = new string[] { 
+                "......",
+                "..a...",
+                "xxa.b.",
+                "....b.",
+                "......",
+                "......"
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 4;
+            return new Input(outputMode, endPoint, useAstar, map);
+        }
 
-        public static Input test(OutputMode outputMode, bool useAstar)
+        public static Input test_st(OutputMode outputMode, bool useAstar)
         {
             string[] map = new string[] { 
                 "aaobcc",
@@ -52,6 +68,21 @@ namespace RushHour
             endPoint.y = 4;
             return new Input(outputMode, endPoint, useAstar, map);
         }
-    }
 
+        public static Input test_fifty(OutputMode outputMode, bool useAstar)
+        {
+            string[] map = new string[] { 
+                "..cddd",
+                "a.ce..",
+                "axxe..",
+                "bbryyi",
+                ".gruui",
+                ".gtt.i"
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 4;
+            return new Input(outputMode, endPoint, useAstar, map);
+        }
+    }
 }
