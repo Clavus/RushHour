@@ -156,19 +156,8 @@ namespace RushHour
 
         public void TestSolved(CarInfo car, GameState state)
         {
-            if (!IsSolved && car.carID == 'x')
-            {
-                if (car.laneOrientation == Orientation.horizontal)
-                {
-                    if (state.carPositions[car.carArrayIndex] == gameData.goalPoint.y)
-                        solvedState = state;
-                }
-                else
-                {
-                    if (state.carPositions[car.carArrayIndex] == gameData.goalPoint.x)
-                        solvedState = state;
-                }
-            }
+            if (!IsSolved && car.carID == 'x' && state.carPositions[car.carArrayIndex] == gameData.goalPos)
+                solvedState = state;
         }
     }
 

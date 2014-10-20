@@ -59,7 +59,7 @@ namespace RushHour
     class GameData
     {
         // target position for the 'x' car to reach
-        public readonly Point goalPoint;
+        public readonly byte goalPos;
         // dimensions of the map (movement limits)
         public readonly Point mapSize;
         // all cars by index
@@ -88,7 +88,6 @@ namespace RushHour
         {
             if (map.Length < 1 || map[0].Length < 1) throw new Exception("Invalid input for GameData construction (mapsize)");
 
-            this.goalPoint = goalPoint;
             this.mapSize = new Point(map.Length, map[0].Length);
             this.cellPossibleCars = new List<CarInfo>[mapSize.x, mapSize.y];
             for (int x = 0; x < mapSize.x; ++x)
@@ -122,6 +121,11 @@ namespace RushHour
 
             if (!carStarts.ContainsKey('x'))
                 throw new Exception("Invalid input for GameData construction (no 'x' car found)");
+
+            if (carStarts['x'].orientation == Orientation.horizontal)
+                this.goalPos = (byte)goalPoint.y;
+            else
+                this.goalPos = (byte)goalPoint.x;
 
             cars = new CarInfo[carStarts.Count];
             startingState = new GameState(carStarts.Count);
@@ -166,22 +170,32 @@ namespace RushHour
                 for (int y = 0; y < mapSize.y; ++y)
                     map[x, y] = '.';
 
-            for (int i = 0; i < cars.Length; ++i)
+            CarInfo targetCar = null;
+            foreach (CarInfo car in cars)
             {
-                int pos = gameState.carPositions[i];
-                if (cars[i].laneOrientation == Orientation.vertical)
+                if (car.carID == 'x') 
+                    targetCar = car;
+
+                int pos = gameState.carPositions[car.carArrayIndex];
+                if (car.laneOrientation == Orientation.vertical)
                 {
-                    for (int y = pos; y < pos + cars[i].carLength; ++y)
-                        map[cars[i].laneIndex, y] = cars[i].carID;
+                    for (int y = pos; y < pos + car.carLength; ++y)
+                        map[car.laneIndex, y] = car.carID;
                 }
                 else
                 {
-                    for (int x = pos; x < pos + cars[i].carLength; ++x)
-                        map[x, cars[i].laneIndex] = cars[i].carID;
+                    for (int x = pos; x < pos + car.carLength; ++x)
+                        map[x, car.laneIndex] = car.carID;
                 }
             }
 
-            map[goalPoint.y, goalPoint.x] = map[goalPoint.y, goalPoint.x] == '.' ? '+' : char.ToUpper(map[goalPoint.y, goalPoint.x]);
+            int gx = targetCar.laneIndex, gy = targetCar.laneIndex;
+            if (targetCar.laneOrientation == Orientation.horizontal)
+                gx = goalPos;
+            else
+                gy = goalPos;
+
+            map[gx, gy] = map[gx, gy] == '.' ? '+' : char.ToUpper(map[gx, gy]);
 
             string res = "";
             for (int x = 0; x < mapSize.x; ++x)
@@ -192,7 +206,7 @@ namespace RushHour
             }
             for (int x = 0; x < mapSize.x; ++x)
                 res += ' ';
-            res += "goal: x->" + map[goalPoint.y, goalPoint.x];
+            res += "goal: x->" + map[gx, gy];
             return res;
         }
 
