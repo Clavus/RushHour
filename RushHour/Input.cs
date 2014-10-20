@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RushHour
 {
     enum OutputMode
     {
-        Count,
-        Solve
+        Count = 0,
+        Solve = 1, 
+        Verbose = 2
     }
 
     class Input
