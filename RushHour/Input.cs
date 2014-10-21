@@ -20,7 +20,7 @@ namespace RushHour
             this.outputMode = outputMode;
             this.useAstar = useAstar;
 
-            gameData = new GameData(map, goal);
+            gameData = new GameData(map, goal, outputMode);
         }
 
         public static Input ReadFromConsole()

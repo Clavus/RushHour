@@ -14,10 +14,10 @@ namespace RushHour
             this.sharedData = sharedData;
         }
 
-        private void addState(CarInfo movedCar, int placesToMove)
+        private void addState(CarInfo movedCar, int placesMoved)
         {
             // create a new state and set the changes
-            GameState newState = new GameState(state, movedCar, placesToMove);
+            GameState newState = state.CreateMoved(movedCar, placesMoved);
 
             // test for completion
             sharedData.TestSolved(movedCar, newState);
@@ -27,7 +27,7 @@ namespace RushHour
         // tests all movements for the provided car, and adds them if they're valid (not overlapping other cars)
         private void testCarMovements(CarInfo car)
         {
-            int pos = state.carPositions[car.carArrayIndex];
+            int pos = state[car.carArrayIndex];
 
             if (car.laneOrientation == Orientation.horizontal)
             {
@@ -56,9 +56,12 @@ namespace RushHour
 
         }
 
-        private void iterate()
+        private bool iterate()
         {
             state = sharedData.GetNextState();
+            if (sharedData.IsSolved || state == null)
+                return false;
+
             nextStates.Clear();
 
             foreach (CarInfo car in sharedData.gameData.cars)
@@ -76,14 +79,12 @@ namespace RushHour
                 foreach (GameState newState in nextStates)
                     sharedData.TryPutState(newState);
             }
+            return true;
         }
 
         public void Begin()
         {
-            while (!sharedData.IsSolved)
-            {
-                iterate();
-            }
+            while (iterate()) ;
         }
     }
 

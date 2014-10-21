@@ -5,7 +5,7 @@ using System.Threading;
 namespace RushHour
 {
     // Thread safe Trie structure (with strict maximum depth and branching)
-    class Trie
+    class ConcurrentTrie
     {
         private class Node
         {
@@ -17,7 +17,7 @@ namespace RushHour
         private int maxDepth_minusOne;
         private int maxBranches;
 
-        public Trie(int maxDepth, int maxBranches)
+        public ConcurrentTrie(int maxDepth, int maxBranches)
         {
             this.maxDepth_minusOne = maxDepth - 1;
             this.maxBranches = maxBranches;
@@ -36,7 +36,7 @@ namespace RushHour
             int childIndex;
             for (int depth = 0; depth < maxDepth_minusOne; ++depth)
             {
-                childIndex = state.carPositions[depth];
+                childIndex = state[depth];
                 storedNode = Interlocked.CompareExchange(ref current.children[childIndex], newNode, null);
                 if (storedNode == null)
                     // node was succesfully placed, new Node instance is needed
@@ -45,7 +45,7 @@ namespace RushHour
             }
 
             // only this last node is checked for the return value.
-            childIndex = state.carPositions[maxDepth_minusOne];
+            childIndex = state[maxDepth_minusOne];
             return Interlocked.CompareExchange(ref current.children[childIndex], new Node(0), null) == null;
         }
     }
@@ -56,15 +56,15 @@ namespace RushHour
 
         private GameState rootState;
         private Queue<GameState> todo = new Queue<GameState>();
-        private Trie visited;
+        private ConcurrentTrie visited;
         private int numVisited = 0;
         private GameState solvedState = null;
 
         public SolverShared(GameData gameData)
         {
-            int maxTrieBranches = Math.Max(gameData.mapSize.x, gameData.mapSize.y);
-            int maxTrieDepth = gameData.startingState.carPositions.Length;
-            this.visited = new Trie(maxTrieDepth, maxTrieBranches);
+            int maxTrieBranches = Math.Max(gameData.mapSize.x, gameData.mapSize.y) - 1; // defines the possible positions cars can be in, disregarding orientation
+            int maxTrieDepth = gameData.cars.Length;
+            this.visited = new ConcurrentTrie(maxTrieDepth, maxTrieBranches);
             this.gameData = gameData;
             this.rootState = gameData.startingState;
 
@@ -77,36 +77,88 @@ namespace RushHour
                 TryPutState(rootState);
         }
 
+        // Outputs the result of the solver
         public void PrintSolution(OutputMode mode)
         {
-            if (solvedState != null)
+            if (solvedState == null)
             {
-                if (mode == OutputMode.Pretty)
+                if (mode == OutputMode.Count)
+                    Console.WriteLine("-1");
+                else
+                    Console.WriteLine("Geen oplossing gevonden");
+            }
+            else
+            {
+                if (mode == OutputMode.Count)
+                {
+                    Console.WriteLine(solvedState.NumPrev);
+                }
+                else
                 {
                     Stack<GameState> solvedStack = new Stack<GameState>();
                     GameState state = solvedState;
                     do
                     {
                         solvedStack.Push(state);
-                        state = state.originState;
-                    }
-                    while (state != null);
-                    int steps = solvedStack.Count - 1;
-                    int i = 0;
-                    while (solvedStack.Count > 0)
+                        state = state.PrevState;
+                    } while (state != null);
+
+                    if (mode == OutputMode.Pretty)
                     {
-                        Console.Clear();
-                        Console.WriteLine("Steps: " + (i++) + "/" + steps);
-                        Console.WriteLine();
-                        Console.WriteLine(gameData.ToString(solvedStack.Pop()));
-                        Thread.Sleep(500);
+                        int steps = solvedStack.Count - 1;
+                        int i = 0;
+                        while (solvedStack.Count > 0)
+                        {
+                            Console.Clear();
+                            Console.WriteLine("Steps: " + (i++) + "/" + steps);
+                            Console.WriteLine();
+                            Console.WriteLine(gameData.ToString(solvedStack.Pop()));
+                            Thread.Sleep(500);
+                        }
+                    }
+                    else
+                    {
+                        state = solvedStack.Pop();
+                        string res = stateDifference(state, solvedStack.Peek());
+                        while (solvedStack.Count > 1)
+                        {
+                            state = solvedStack.Pop();
+                            res += ", " + stateDifference(state, solvedStack.Peek());
+                        }
+                        Console.WriteLine(res);
                     }
                 }
             }
-            else if (mode == OutputMode.Count)
-                Console.WriteLine("-1");
-            else
-                Console.WriteLine("Geen oplossing gevonden");
+        }
+
+        // Helper function for the Solve output mode
+        private string stateDifference(GameState current, GameState next)
+        {
+            for (int i = 0; i < gameData.cars.Length; ++i)
+                if (current[i] != next[i])
+                {
+                    CarInfo car = gameData.cars[i];
+                    int posDiff = (int)(next[i]) - (int)(current[i]);
+
+                    string res = car.carID.ToString();
+                    if (posDiff > 0)
+                    {
+                        if (car.laneOrientation == Orientation.horizontal)
+                            res += "r" + posDiff;
+                        else
+                            res += "d" + posDiff;
+                    }
+                    else
+                    {
+                        posDiff = -posDiff;
+                        if (car.laneOrientation == Orientation.horizontal)
+                            res += "l" + posDiff;
+                        else
+                            res += "u" + posDiff;
+                    }
+                    return res;
+                }
+            return "";
         }
 
         public void TryPutState(GameState state)
@@ -121,23 +173,29 @@ namespace RushHour
 
         public GameState GetNextState()
         {
-            return todo.Dequeue();
+            if (todo.Count > 0)
+                return todo.Dequeue();
+            else
+                return null;
         }
 
         public int MapWidth { get { return gameData.mapSize.x; } }
         public int MapHeight { get { return gameData.mapSize.y; } }
 
+        // does a general test for if a cell is occupied by any car in the given state
         public bool IsOccupied(int x, int y, GameState state)
         {
+            // optimized to only check cars that could possibly occupy a cell
             foreach (CarInfo possibleOccupant in gameData.cellPossibleCars[x, y])
                 if (IsOccupying(x, y, state, possibleOccupant))
                     return true;
             return false;
         }
 
+        // tests if a car occupies a specific cell in the given state
         private bool IsOccupying(int x, int y, GameState state, CarInfo possibleOccupant)
         {
-            int pos = state.carPositions[possibleOccupant.carArrayIndex];
+            int pos = state[possibleOccupant.carArrayIndex];
 
             if (possibleOccupant.laneOrientation == Orientation.horizontal)
             {
@@ -156,7 +214,7 @@ namespace RushHour
 
         public void TestSolved(CarInfo car, GameState state)
         {
-            if (!IsSolved && car.carID == 'x' && state.carPositions[car.carArrayIndex] == gameData.goalPos)
+            if (!IsSolved && car.carID == 'x' && state[car.carArrayIndex] == gameData.goalPos)
                 solvedState = state;
         }
     }

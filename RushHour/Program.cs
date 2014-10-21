@@ -8,8 +8,8 @@ namespace RushHour
         {
             //Input input = Input.test_drie(OutputMode.Pretty, false);
             //Input input = Input.test_st(OutputMode.Pretty, false);
-            //Input input = Input.test_fifty(OutputMode.Pretty, false);
-            Input input = Input.test_rondje(OutputMode.Pretty, false);
+            Input input = Input.test_fifty(OutputMode.Solve, false);
+            //Input input = Input.test_rondje(OutputMode.Pretty, false);
             //Input input = Input.test_kannie(OutputMode.Pretty, false);
             //Input input = Input.ReadFromConsole();
 
