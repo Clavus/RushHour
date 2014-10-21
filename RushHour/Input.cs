@@ -12,15 +12,15 @@ namespace RushHour
     class Input
     {
         public readonly OutputMode outputMode;
-        public readonly bool useAstar;
+        public readonly bool use_a_star;
         public readonly GameData gameData;
 
-        private Input(OutputMode outputMode, Point goal, bool useAstar, string[] map)
+        private Input(OutputMode outputMode, Point goal, bool use_a_star, string[] map)
         {
             this.outputMode = outputMode;
-            this.useAstar = useAstar;
+            this.use_a_star = use_a_star;
 
-            gameData = new GameData(map, goal, outputMode);
+            gameData = new GameData(map, goal, outputMode, use_a_star);
         }
 
         public static Input ReadFromConsole()
@@ -28,16 +28,16 @@ namespace RushHour
             OutputMode m = (OutputMode)int.Parse(Console.ReadLine());
             Point dim = Point.Parse(Console.ReadLine());
             Point goal = Point.Parse(Console.ReadLine());
-            bool useAstar = int.Parse(Console.ReadLine()) == 1 ? true : false;
+            bool use_a_star = int.Parse(Console.ReadLine()) == 1 ? true : false;
 
             string[] map = new string[dim.y];
             for (int i = 0; i < dim.y; ++i)
                 map[i] = Console.ReadLine();
 
-            return new Input(m, goal, useAstar, map);
+            return new Input(m, goal, use_a_star, map);
         }
-        
-        public static Input test_drie(OutputMode outputMode, bool useAstar)
+
+        public static Input test_drie(OutputMode outputMode, bool use_a_star)
         {
             string[] map = new string[] { 
                 "......",
@@ -50,10 +50,10 @@ namespace RushHour
             Point endPoint = new Point();
             endPoint.x = 2;
             endPoint.y = 4;
-            return new Input(outputMode, endPoint, useAstar, map);
+            return new Input(outputMode, endPoint, use_a_star, map);
         }
 
-        public static Input test_st(OutputMode outputMode, bool useAstar)
+        public static Input test_st(OutputMode outputMode, bool use_a_star)
         {
             string[] map = new string[] { 
                 "aaobcc",
@@ -66,10 +66,10 @@ namespace RushHour
             Point endPoint = new Point();
             endPoint.x = 2;
             endPoint.y = 4;
-            return new Input(outputMode, endPoint, useAstar, map);
+            return new Input(outputMode, endPoint, use_a_star, map);
         }
 
-        public static Input test_rondje(OutputMode outputMode, bool useAstar)
+        public static Input test_rondje(OutputMode outputMode, bool use_a_star)
         {
             string[] map = new string[] { 
                 "..cddd...q..",
@@ -82,10 +82,10 @@ namespace RushHour
             Point endPoint = new Point();
             endPoint.x = 2;
             endPoint.y = 10;
-            return new Input(outputMode, endPoint, useAstar, map);
+            return new Input(outputMode, endPoint, use_a_star, map);
         }
 
-        public static Input test_kannie(OutputMode outputMode, bool useAstar)
+        public static Input test_kannie(OutputMode outputMode, bool use_a_star)
         {
             string[] map = new string[] { 
                 ".xx......q..",
@@ -94,10 +94,10 @@ namespace RushHour
             Point endPoint = new Point();
             endPoint.x = 0;
             endPoint.y = 10;
-            return new Input(outputMode, endPoint, useAstar, map);
+            return new Input(outputMode, endPoint, use_a_star, map);
         }
 
-        public static Input test_fifty(OutputMode outputMode, bool useAstar)
+        public static Input test_fifty(OutputMode outputMode, bool use_a_star)
         {
             string[] map = new string[] { 
                 "..cddd",
@@ -110,7 +110,67 @@ namespace RushHour
             Point endPoint = new Point();
             endPoint.x = 2;
             endPoint.y = 4;
-            return new Input(outputMode, endPoint, useAstar, map);
+            return new Input(outputMode, endPoint, use_a_star, map);
+        }
+
+        public static Input test_hard1(OutputMode outputMode, bool use_a_star)
+        {
+            string[] map = new string[] { 
+                "ggggrrrrtt...........",
+                "iii....h.fjjjpo...s.u",
+                "xxab...h.flk.po...s.u",
+                "ccab...mm.lk.nnnvvq..",
+                "............dddeeeq.."
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 2;
+            return new Input(outputMode, endPoint, use_a_star, map);
+        }
+
+        public static Input test_hard2(OutputMode outputMode, bool use_a_star)
+        {
+            string[] map = new string[] { 
+                "ggggrrrrtt...........",
+                "iii....h.fjjjpo...s.u",
+                "xxab...h.flk.po...s.u",
+                "ccab......lk.nnnvvq..",
+                "............dddeeeq.."
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 7;
+            return new Input(outputMode, endPoint, use_a_star, map);
+        }
+
+        public static Input test_hard3(OutputMode outputMode, bool use_a_star)
+        {
+            string[] map = new string[] { 
+                "ggggrrrrtt...........",
+                "iii....h.fjjjpo...s.u",
+                "xxab...h.flk.po...s.u",
+                "ccab...mm.lk.nnnvvq..",
+                "............dddeeeq.."
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 7;
+            return new Input(outputMode, endPoint, use_a_star, map);
+        }
+
+        public static Input test_hard4(OutputMode outputMode, bool use_a_star)
+        {
+            string[] map = new string[] { 
+                "ggggrrrrtt...........",
+                "iii....h.fjjjpo...s.u",
+                "xxab...h.flk.po...s.u",
+                "ccab...mm.lk.nnnvvq..",
+                "............dddeeeq.."
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 19;
+            return new Input(outputMode, endPoint, use_a_star, map);
         }
     }
 }

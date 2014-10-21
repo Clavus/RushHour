@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Containers.cs" />
     <Compile Include="GameData.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Program.cs" />

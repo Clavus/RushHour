@@ -4,73 +4,31 @@ using System.Threading;
 
 namespace RushHour
 {
-    // Thread safe Trie structure (with strict maximum depth and branching)
-    class ConcurrentTrie
-    {
-        private class Node
-        {
-            internal Node[] children;
-            internal Node(int numChildren) { children = new Node[numChildren]; }
-        }
-
-        private Node root;
-        private int maxDepth_minusOne;
-        private int maxBranches;
-
-        public ConcurrentTrie(int maxDepth, int maxBranches)
-        {
-            this.maxDepth_minusOne = maxDepth - 1;
-            this.maxBranches = maxBranches;
-            this.root = new Node(maxBranches);
-        }
-
-        // Tries to puts a byte array into the trie. Returns true if it didn't exist, false otherwise. 
-        public bool TryPut(GameState state)
-        {
-            // node to be used to fill in a null position
-            Node newNode = new Node(maxBranches);
-            Node storedNode;
-
-            // traverse the trie until the second last node is encountered
-            Node current = root;
-            int childIndex;
-            for (int depth = 0; depth < maxDepth_minusOne; ++depth)
-            {
-                childIndex = state[depth];
-                storedNode = Interlocked.CompareExchange(ref current.children[childIndex], newNode, null);
-                if (storedNode == null)
-                    // node was succesfully placed, new Node instance is needed
-                    newNode = new Node(maxBranches);
-                current = current.children[childIndex];
-            }
-
-            // only this last node is checked for the return value.
-            childIndex = state[maxDepth_minusOne];
-            return Interlocked.CompareExchange(ref current.children[childIndex], new Node(0), null) == null;
-        }
-    }
-
     class SolverShared
     {
         public readonly GameData gameData;
 
         private GameState rootState;
-        private Queue<GameState> todo = new Queue<GameState>();
+        private TodoQueue todo;
         private ConcurrentTrie visited;
         private int numVisited = 0;
         private GameState solvedState = null;
 
         public SolverShared(GameData gameData)
         {
-            int maxTrieBranches = Math.Max(gameData.mapSize.x, gameData.mapSize.y) - 1; // defines the possible positions cars can be in, disregarding orientation
+            int maxSize = Math.Max(gameData.mapSize.x, gameData.mapSize.y) - 1; // defines the possible positions any car can be in, disregarding orientation
             int maxTrieDepth = gameData.cars.Length;
-            this.visited = new ConcurrentTrie(maxTrieDepth, maxTrieBranches);
+            this.visited = new ConcurrentTrie(maxTrieDepth, maxSize);
             this.gameData = gameData;
             this.rootState = gameData.startingState;
 
+            if (gameData.use_a_star)
+                todo = new MappedQueueSet(maxSize);
+            else
+                todo = new SingleQueue();
+
             // test if the first state starts out as solved
-            foreach (CarInfo car in gameData.cars)
-                TestSolved(car, rootState);
+            TestSolved(rootState);
 
             if (!IsSolved)
                 // no luck, now we have to solve
@@ -78,18 +36,18 @@ namespace RushHour
         }
 
         // Outputs the result of the solver
-        public void PrintSolution(OutputMode mode)
+        public void PrintSolution()
         {
             if (solvedState == null)
             {
-                if (mode == OutputMode.Count)
+                if (gameData.mode == OutputMode.Count)
                     Console.WriteLine("-1");
                 else
                     Console.WriteLine("Geen oplossing gevonden");
             }
             else
             {
-                if (mode == OutputMode.Count)
+                if (gameData.mode == OutputMode.Count)
                 {
                     Console.WriteLine(solvedState.NumPrev);
                 }
@@ -103,7 +61,7 @@ namespace RushHour
                         state = state.PrevState;
                     } while (state != null);
 
-                    if (mode == OutputMode.Pretty)
+                    if (gameData.mode == OutputMode.Pretty)
                     {
                         int steps = solvedStack.Count - 1;
                         int i = 0;
@@ -166,18 +124,52 @@ namespace RushHour
             if (visited.TryPut(state))
             {
                 //Console.WriteLine(gameData.ToString(state));
-                todo.Enqueue(state);
+                todo.Put(state, this);
                 Interlocked.Increment(ref numVisited);
             }
         }
 
         public GameState GetNextState()
         {
-            if (todo.Count > 0)
-                return todo.Dequeue();
-            else
-                return null;
+            return todo.TryGet();
         }
+
+        // Used by A*. Estimates how close to a solution a state is, using a simple measure of the amount of occupied cells in front of 'x' and the distance of 'x' to his goal.
+        public int EstimateSolvedness(GameState state)
+        {
+            int distance = gameData.goalPos - state[gameData.targetCar.carArrayIndex];
+
+            // solved
+            if (distance == 0)
+                return 0;
+
+            int numBlocked = 0;
+            int index = gameData.targetCar.carLength;
+            int end = index + distance;
+            if (index > end)
+            {
+                int tmp = index;
+                index = end;
+                end = tmp;
+            }
+            if (gameData.targetCar.laneOrientation == Orientation.horizontal)
+            {
+                int y = gameData.targetCar.laneIndex;
+                for (; index != end; ++index)
+                    if (IsOccupied(index, y, state))
+                        ++numBlocked;
+            }
+            else
+            {
+                int x = gameData.targetCar.laneIndex;
+                for (; index != end; ++index)
+                    if (IsOccupied(x, index, state))
+                        ++numBlocked;
+            }
+
+            return numBlocked;
+        }
+
 
         public int MapWidth { get { return gameData.mapSize.x; } }
         public int MapHeight { get { return gameData.mapSize.y; } }
@@ -212,9 +204,9 @@ namespace RushHour
 
         public bool IsSolved { get { return solvedState != null; } }
 
-        public void TestSolved(CarInfo car, GameState state)
+        public void TestSolved(GameState state)
         {
-            if (!IsSolved && car.carID == 'x' && state[car.carArrayIndex] == gameData.goalPos)
+            if (!IsSolved && state[gameData.targetCar.carArrayIndex] == gameData.goalPos)
                 solvedState = state;
         }
     }

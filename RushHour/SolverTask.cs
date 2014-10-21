@@ -20,7 +20,8 @@ namespace RushHour
             GameState newState = state.CreateMoved(movedCar, placesMoved);
 
             // test for completion
-            sharedData.TestSolved(movedCar, newState);
+            if (movedCar.carID == 'x')
+                sharedData.TestSolved(newState);
             nextStates.Add(newState);
         }
 

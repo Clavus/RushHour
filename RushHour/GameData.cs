@@ -39,14 +39,20 @@ namespace RushHour
         public int carLength;
     }
 
+    // The GameData class stores all non-changing information about the game being solved. It cooperates with GameState to give meaning to the positions stored therein.
     class GameData
     {
+        public readonly bool use_a_star;
+        // output mode to use
+        public readonly OutputMode mode;
         // target position for the 'x' car to reach
         public readonly byte goalPos;
         // dimensions of the map (movement limits)
         public readonly Point mapSize;
         // all cars by index
         public readonly CarInfo[] cars;
+        // the 'x' car
+        public readonly CarInfo targetCar;
         // stores references to all cars that might at one point be present at a cell
         public readonly List<CarInfo>[,] cellPossibleCars;
         // the state of the game at starting positions
@@ -67,9 +73,12 @@ namespace RushHour
             }
         }
 
-        public GameData(string[] map, Point goalPoint, OutputMode outputMode)
+        public GameData(string[] map, Point goalPoint, OutputMode outputMode, bool use_a_star)
         {
             if (map.Length < 1 || map[0].Length < 1) throw new Exception("Invalid input for GameData construction (mapsize)");
+
+            this.mode = outputMode;
+            this.use_a_star = use_a_star;
 
             // note that the string array input indexes y-x. Conversion to x-y will happen here
             this.mapSize = new Point(map[0].Length, map.Length);
@@ -148,6 +157,9 @@ namespace RushHour
                     throw new Exception("Invalid input for GameData construction (badly aligned cars (again))");
 
                 cars[index++] = car;
+
+                if (car.carID == 'x')
+                    targetCar = car;
             }
         }
 
@@ -159,12 +171,8 @@ namespace RushHour
                 for (int y = 0; y < mapSize.y; ++y)
                     map[x, y] = '.';
 
-            CarInfo targetCar = null;
             foreach (CarInfo car in cars)
             {
-                if (car.carID == 'x')
-                    targetCar = car;
-
                 int pos = gameState[car.carArrayIndex];
                 if (car.laneOrientation == Orientation.horizontal)
                 {

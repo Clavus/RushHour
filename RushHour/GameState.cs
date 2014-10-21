@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace RushHour
 {
+    // The GameState class stores all variable information about the game being solved. It cooperates with GameState to give meaning to the positions stored here.
     abstract class GameState
     {
         private readonly byte[] carPositions;
