@@ -69,6 +69,34 @@ namespace RushHour
             return new Input(outputMode, endPoint, useAstar, map);
         }
 
+        public static Input test_rondje(OutputMode outputMode, bool useAstar)
+        {
+            string[] map = new string[] { 
+                "..cddd...q..",
+                "a.ce.....q..",
+                "axxe.....q..",
+                "bbryyi......",
+                ".gruui......",
+                ".gtt.i...zz."
+            };
+            Point endPoint = new Point();
+            endPoint.x = 2;
+            endPoint.y = 10;
+            return new Input(outputMode, endPoint, useAstar, map);
+        }
+
+        public static Input test_kannie(OutputMode outputMode, bool useAstar)
+        {
+            string[] map = new string[] { 
+                ".xx......q..",
+                ".........q..",
+            };
+            Point endPoint = new Point();
+            endPoint.x = 0;
+            endPoint.y = 10;
+            return new Input(outputMode, endPoint, useAstar, map);
+        }
+
         public static Input test_fifty(OutputMode outputMode, bool useAstar)
         {
             string[] map = new string[] { 

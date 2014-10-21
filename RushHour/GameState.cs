@@ -88,7 +88,8 @@ namespace RushHour
         {
             if (map.Length < 1 || map[0].Length < 1) throw new Exception("Invalid input for GameData construction (mapsize)");
 
-            this.mapSize = new Point(map.Length, map[0].Length);
+            // note that the string array input indexes y-x. Conversion to x-y will happen here
+            this.mapSize = new Point(map[0].Length, map.Length);
             this.cellPossibleCars = new List<CarInfo>[mapSize.x, mapSize.y];
             for (int x = 0; x < mapSize.x; ++x)
                 for (int y = 0; y < mapSize.y; ++y)
@@ -100,14 +101,14 @@ namespace RushHour
             for (int x = 0; x < mapSize.x; ++x)
                 for (int y = 0; y < mapSize.y; ++y)
                 {
-                    char car = map[x][y];
+                    char car = map[y][x];
                     if (car == '.')
                         continue;
 
                     if (carStarts.TryGetValue(car, out cs))
                     {
-                        if (cs.startPos.x == x) cs.orientation = Orientation.horizontal;
-                        else if (cs.startPos.y == y) cs.orientation = Orientation.vertical;
+                        if (cs.startPos.x == x) cs.orientation = Orientation.vertical;
+                        else if (cs.startPos.y == y) cs.orientation = Orientation.horizontal;
                         else throw new Exception("Invalid input for GameData construction (badly aligned cars)");
 
                         if (cs.startPos.x > x) cs.startPos.x = x;
@@ -141,19 +142,21 @@ namespace RushHour
 
                 if (start.orientation == Orientation.horizontal)
                 {
-                    for (int i = 0; i < mapSize.x; ++i)
-                        cellPossibleCars[i, start.startPos.x].Add(car);
+                    car.laneIndex = start.startPos.y;
 
-                    car.laneIndex = start.startPos.x;
-                    startingState.carPositions[index] = (byte)start.startPos.y;
+                    for (int i = 0; i < mapSize.x; ++i)
+                        cellPossibleCars[i, car.laneIndex].Add(car);
+
+                    startingState.carPositions[index] = (byte)start.startPos.x;
                 }
                 else if (start.orientation == Orientation.vertical)
                 {
-                    for (int i = 0; i < mapSize.y; ++i)
-                        cellPossibleCars[start.startPos.y, i].Add(car);
+                    car.laneIndex = start.startPos.x;
 
-                    car.laneIndex = start.startPos.y;
-                    startingState.carPositions[index] = (byte)start.startPos.x;
+                    for (int i = 0; i < mapSize.y; ++i)
+                        cellPossibleCars[car.laneIndex, i].Add(car);
+
+                    startingState.carPositions[index] = (byte)start.startPos.y;
                 }
                 else
                     throw new Exception("Invalid input for GameData construction (badly aligned cars (again))");
@@ -177,15 +180,15 @@ namespace RushHour
                     targetCar = car;
 
                 int pos = gameState.carPositions[car.carArrayIndex];
-                if (car.laneOrientation == Orientation.vertical)
-                {
-                    for (int y = pos; y < pos + car.carLength; ++y)
-                        map[car.laneIndex, y] = car.carID;
-                }
-                else
+                if (car.laneOrientation == Orientation.horizontal)
                 {
                     for (int x = pos; x < pos + car.carLength; ++x)
                         map[x, car.laneIndex] = car.carID;
+                }
+                else
+                {
+                    for (int y = pos; y < pos + car.carLength; ++y)
+                        map[car.laneIndex, y] = car.carID;
                 }
             }
 
@@ -197,11 +200,14 @@ namespace RushHour
 
             map[gx, gy] = map[gx, gy] == '.' ? '+' : char.ToUpper(map[gx, gy]);
 
+            // transpose
             string res = "";
-            for (int x = 0; x < mapSize.x; ++x)
+            for (int y = 0; y < mapSize.y; ++y)
             {
-                for (int y = 0; y < mapSize.y; ++y)
-                    res += map[y, x];
+                for (int x = 0; x < mapSize.x; ++x)
+                {
+                    res += map[x, y];
+                }
                 res += '\n';
             }
             for (int x = 0; x < mapSize.x; ++x)
