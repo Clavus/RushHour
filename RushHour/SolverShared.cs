@@ -121,14 +121,16 @@ namespace RushHour
             return "";
         }
 
-        public void TryPutState(GameState state)
+        public bool TryPutState(GameState state)
         {
             if (visited.TryPut(state))
             {
                 //Console.WriteLine(gameData.ToString(state));
                 todo.Put(state, this);
                 //Interlocked.Increment(ref numVisited);
+                return true;
             }
+            return false;
         }
 
         public GameState GetNextState()

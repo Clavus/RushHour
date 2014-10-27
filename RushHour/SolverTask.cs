@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace RushHour
 {
@@ -57,11 +58,12 @@ namespace RushHour
 
         }
 
-        private bool iterate()
+        private void Iterate(object worker)
         {
-            state = sharedData.GetNextState();
+            //state = sharedData.GetNextState();
+            state = (worker as Worker).state;
             if (sharedData.IsSolved || state == null)
-                return false;
+                return;
 
             nextStates.Clear();
 
@@ -78,14 +80,33 @@ namespace RushHour
             {
                 // add all new options to the shared queue
                 foreach (GameState newState in nextStates)
-                    sharedData.TryPutState(newState);
+                    if (sharedData.TryPutState(newState))
+                    {
+                        Worker newWorker = new Worker(newState);
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(Iterate), newWorker);
+                        WaitHandle.WaitAll(new ManualResetEvent[] { newWorker.doneHandle });
+                    }
             }
-            return true;
+        }
+
+        class Worker
+        {
+            public ManualResetEvent doneHandle;
+            public GameState state;
+
+            public Worker(GameState state)
+            {
+                this.state = state;
+                doneHandle = new ManualResetEvent(false);
+            }
         }
 
         public void Begin()
         {
-            while (iterate()) ;
+            Worker worker = new Worker(sharedData.GetNextState());
+            ThreadPool.QueueUserWorkItem(new WaitCallback(Iterate), worker);
+            WaitHandle.WaitAll(new ManualResetEvent[] { worker.doneHandle });
+            //while (iterate()) ;
         }
     }
 
