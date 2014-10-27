@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 namespace RushHour
 {
@@ -52,7 +53,7 @@ namespace RushHour
     interface TodoQueue
     {
         void Put(GameState state, SolverShared sharedData);
-        GameState TryGet();
+        void RetrieveAll(List<GameState> outStates);
     }
 
     // Used by A*. Two measures are used, one having priority over the other.
@@ -75,16 +76,19 @@ namespace RushHour
             todos[numBlocked].Enqueue(state);
         }
 
-        public GameState TryGet()
-        {
-            GameState stored;
+        public void RetrieveAll(List<GameState> outStates)
+        {   
             for (int i = 0; i < size; ++i)
             {
-                // numBlocked is checked first, as it has priority
-                if (todos[i].TryDequeue(out stored))
-                    return stored;
+                // lowest index is best guess
+                if (!todos[i].IsEmpty)
+                {
+                    GameState stored;
+                    while (todos[i].TryDequeue(out stored))
+                        outStates.Add(stored);
+                    break;
+                }
             }
-            return null;
         }
     }
 
@@ -96,11 +100,11 @@ namespace RushHour
         {
             todo.Enqueue(state);
         }
-        public GameState TryGet()
+        public void RetrieveAll(List<GameState> outStates)
         {
-            GameState result = null;
-            todo.TryDequeue(out result);
-            return result;
+            GameState stored;
+            while (todo.TryDequeue(out stored))
+                outStates.Add(stored);
         }
     }
 

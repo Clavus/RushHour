@@ -9,11 +9,9 @@ namespace RushHour
         public readonly GameData gameData;
 
         private GameState rootState;
-        //private TodoQueue todo;
+        private TodoQueue todo;
         private ConcurrentTrie visited;
-        //private int numVisited = 0;
-        //private int round = 0;
-        private int numPendingTasks = 0;
+        private int numRemainingTasks = 0;
 
         private object solutionLock = new object();
         private GameState solvedState = null;
@@ -28,10 +26,13 @@ namespace RushHour
             this.gameData = gameData;
             this.rootState = gameData.startingState;
 
-            //if (gameData.use_a_star)
-            //    todo = new MappedQueueSet(maxSize);
-            //else
-            //    todo = new SingleQueue();
+            if (gameData.use_a_star)
+                todo = new MappedQueueSet(maxSize);
+            else
+                todo = new SingleQueue();
+
+            TryAddState(rootState);
+            TestSolved(rootState);
         }
 
         // Outputs the result of the solver
@@ -118,47 +119,43 @@ namespace RushHour
             return "";
         }
 
-        public void TryPutState(GameState state)
+        public void TryAddState(GameState state)
         {
             if (visited.TryPut(state))
-            {
-                SolverTask task = new SolverTask(this, state);
-                ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate));
-                Interlocked.Increment(ref numPendingTasks);
-
-                //newDoneHandles.Add(task.DoneHandle);
-                //Console.WriteLine(gameData.ToString(state));
-                //todo.Put(state, this);
-                //Interlocked.Increment(ref numVisited);
-                //return true;
-            }
-            //return false;
+                todo.Put(state, this);
         }
 
         internal void SignalTaskFinished()
         {
-            if (Interlocked.Decrement(ref numPendingTasks) == 0){
-                // done apparently
-                doneEvent.Set();
+            if (Interlocked.Decrement(ref numRemainingTasks) == 0)
+                beginNewSearch();
+        }
+
+        private void beginNewSearch()
+        {
+            List<GameState> newIterationStates = new List<GameState>();
+            todo.RetrieveAll(newIterationStates);
+
+            // depth level was finished
+            if (IsSolved || newIterationStates.Count == 0)
+                doneEvent.Set(); // we are done
+            else
+            {
+                // prepare next depth iteration
+                numRemainingTasks = newIterationStates.Count;
+                foreach (GameState state in newIterationStates)
+                {
+                    SolverTask task = new SolverTask(this, state);
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate));
+                }
             }
         }
 
         public void Begin()
         {
-            // test if the first state starts out as solved
-            TestSolved(rootState);
-
-            if (!IsSolved)
-                // no luck, now we have to solve
-                TryPutState(rootState);
-
+            beginNewSearch();
             WaitHandle.WaitAll(new ManualResetEvent[] { doneEvent });
         }
-
-        //public GameState GetNextState()
-        //{
-        //    return todo.TryGet();
-        //}
 
         // Used by A*. Estimates how close to a solution a state is, using a simple measure of the amount of occupied cells in front of 'x' and the distance of 'x' to his goal.
         public int EstimateSolvedness(GameState state)
@@ -234,12 +231,7 @@ namespace RushHour
         {
             if (state[gameData.targetCar.carArrayIndex] == gameData.goalPos)
             {
-                // it might be possible to have multiple states solved, so lock and check if it's the case, and if so, pick the better
-                lock (solutionLock)
-                {
-                    if (solvedState == null || solvedState.NumPrev > state.NumPrev)
-                        solvedState = state;
-                }
+                solvedState = state;
             }
         }
     }

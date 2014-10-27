@@ -10,19 +10,10 @@ namespace RushHour
         private GameState state;
         private List<GameState> nextStates = new List<GameState>();
 
-        //public ManualResetEvent DoneHandle;
-
-        //public SolverTask(SolverShared sharedData)
-        //{
-        //    this.sharedData = sharedData;
-        //    //this.DoneHandle = new ManualResetEvent(false);
-        //}
-
         public SolverTask(SolverShared sharedData, GameState state)
         {
             this.sharedData = sharedData;
             this.state = state;
-            //this.DoneHandle = new ManualResetEvent(false);
         }
 
         private void addState(CarInfo movedCar, int placesMoved)
@@ -70,44 +61,14 @@ namespace RushHour
 
         public void Iterate(object taskObject)
         {
-            //state = sharedData.GetNextState();
-            //state = gstate as GameState;
-            if (sharedData.IsSolved || state == null)
-            {
-                sharedData.SignalTaskFinished();
-                //DoneHandle.Set();
-                return;
-            }
-
-            nextStates.Clear();
-
             foreach (CarInfo car in sharedData.gameData.cars)
-            {
                 testCarMovements(car);
 
-                // test if this (or any other) thread has found a solution
-                if (sharedData.IsSolved)
-                    break;
-            }
-
-            if (!sharedData.IsSolved)
-            {
-                // add all new options to the shared queue
-                List<ManualResetEvent> newDoneHandles = new List<ManualResetEvent>();
-
-                foreach (GameState newState in nextStates)
-                {
-                    sharedData.TryPutState(newState);
-                }
-            }
+            foreach (GameState newState in nextStates)
+                sharedData.TryAddState(newState);
 
             sharedData.SignalTaskFinished();
         }
-
-        //public void Begin()
-        //{
-        //    //while (Iterate()) ;
-        //}
     }
 
 }
