@@ -116,9 +116,9 @@ namespace RushHour
                 throw new Exception("Invalid input for GameData construction (no 'x' car found)");
 
             if (carStarts['x'].orientation == Orientation.horizontal)
-                this.goalPos = (byte)goalPoint.y;
-            else
                 this.goalPos = (byte)goalPoint.x;
+            else
+                this.goalPos = (byte)goalPoint.y;
 
             cars = new CarInfo[carStarts.Count];
             if (outputMode == OutputMode.Count)

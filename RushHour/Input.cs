@@ -92,8 +92,8 @@ namespace RushHour
                 ".........q..",
             };
             Point endPoint = new Point();
-            endPoint.x = 0;
-            endPoint.y = 10;
+            endPoint.x = 10;
+            endPoint.y = 0;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 

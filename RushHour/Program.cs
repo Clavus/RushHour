@@ -14,8 +14,8 @@ namespace RushHour
             //Input input = Input.test_hard1(OutputMode.Pretty, false);
             //Input input = Input.test_hard2(OutputMode.Pretty, false);
             //Input input = Input.test_hard3(OutputMode.Pretty, true);
-            Input input = Input.test_hard4(OutputMode.Pretty, true);
-            //Input input = Input.ReadFromConsole();
+            //Input input = Input.test_hard4(OutputMode.Pretty, true);
+            Input input = Input.ReadFromConsole();
 
             //Console.WriteLine(input.gameData);
 
@@ -28,7 +28,7 @@ namespace RushHour
             
             sharedData.PrintSolution();
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
     }
 }
