@@ -10,9 +10,12 @@ namespace RushHour
         private GameState state;
         private List<GameState> nextStates = new List<GameState>();
 
+        public ManualResetEvent DoneHandle;
+
         public SolverTask(SolverShared sharedData)
         {
             this.sharedData = sharedData;
+            this.DoneHandle = new ManualResetEvent(false);
         }
 
         private void addState(CarInfo movedCar, int placesMoved)
@@ -58,12 +61,15 @@ namespace RushHour
 
         }
 
-        private void Iterate(object worker)
+        public void Iterate(object gstate)
         {
             //state = sharedData.GetNextState();
-            state = (worker as Worker).state;
+            state = gstate as GameState;
             if (sharedData.IsSolved || state == null)
+            {
+                DoneHandle.Set();
                 return;
+            }
 
             nextStates.Clear();
 
@@ -79,34 +85,29 @@ namespace RushHour
             if (!sharedData.IsSolved)
             {
                 // add all new options to the shared queue
+                List<ManualResetEvent> newDoneHandles = new List<ManualResetEvent>();
+
                 foreach (GameState newState in nextStates)
+                {
                     if (sharedData.TryPutState(newState))
                     {
-                        Worker newWorker = new Worker(newState);
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(Iterate), newWorker);
-                        WaitHandle.WaitAll(new ManualResetEvent[] { newWorker.doneHandle });
+                        SolverTask task = new SolverTask(sharedData);
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate), newState);
+                        newDoneHandles.Add(task.DoneHandle);
                     }
-            }
-        }
+                }
 
-        class Worker
-        {
-            public ManualResetEvent doneHandle;
-            public GameState state;
-
-            public Worker(GameState state)
-            {
-                this.state = state;
-                doneHandle = new ManualResetEvent(false);
+                // wait for all to finish
+                if (newDoneHandles.Count > 0)
+                    WaitHandle.WaitAll(newDoneHandles.ToArray());
             }
+
+            DoneHandle.Set();
         }
 
         public void Begin()
         {
-            Worker worker = new Worker(sharedData.GetNextState());
-            ThreadPool.QueueUserWorkItem(new WaitCallback(Iterate), worker);
-            WaitHandle.WaitAll(new ManualResetEvent[] { worker.doneHandle });
-            //while (iterate()) ;
+            //while (Iterate()) ;
         }
     }
 

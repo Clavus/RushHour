@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace RushHour
 {
@@ -19,11 +20,12 @@ namespace RushHour
 
             //Console.WriteLine(input.gameData);
 
-
-
             SolverShared sharedData = new SolverShared(input.gameData);
-            
+
             SolverTask task = new SolverTask(sharedData);
+            ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate), sharedData.GetNextState());
+            WaitHandle.WaitAll(new ManualResetEvent[] { task.DoneHandle });
+            
             task.Begin();
             
             sharedData.PrintSolution();
