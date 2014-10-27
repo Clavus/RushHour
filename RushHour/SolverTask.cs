@@ -10,12 +10,19 @@ namespace RushHour
         private GameState state;
         private List<GameState> nextStates = new List<GameState>();
 
-        public ManualResetEvent DoneHandle;
+        //public ManualResetEvent DoneHandle;
 
-        public SolverTask(SolverShared sharedData)
+        //public SolverTask(SolverShared sharedData)
+        //{
+        //    this.sharedData = sharedData;
+        //    //this.DoneHandle = new ManualResetEvent(false);
+        //}
+
+        public SolverTask(SolverShared sharedData, GameState state)
         {
             this.sharedData = sharedData;
-            this.DoneHandle = new ManualResetEvent(false);
+            this.state = state;
+            //this.DoneHandle = new ManualResetEvent(false);
         }
 
         private void addState(CarInfo movedCar, int placesMoved)
@@ -61,13 +68,14 @@ namespace RushHour
 
         }
 
-        public void Iterate(object gstate)
+        public void Iterate(object taskObject)
         {
             //state = sharedData.GetNextState();
-            state = gstate as GameState;
+            //state = gstate as GameState;
             if (sharedData.IsSolved || state == null)
             {
-                DoneHandle.Set();
+                sharedData.SignalTaskFinished();
+                //DoneHandle.Set();
                 return;
             }
 
@@ -89,26 +97,17 @@ namespace RushHour
 
                 foreach (GameState newState in nextStates)
                 {
-                    if (sharedData.TryPutState(newState))
-                    {
-                        SolverTask task = new SolverTask(sharedData);
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate), newState);
-                        newDoneHandles.Add(task.DoneHandle);
-                    }
+                    sharedData.TryPutState(newState);
                 }
-
-                // wait for all to finish
-                if (newDoneHandles.Count > 0)
-                    WaitHandle.WaitAll(newDoneHandles.ToArray());
             }
 
-            DoneHandle.Set();
+            sharedData.SignalTaskFinished();
         }
 
-        public void Begin()
-        {
-            //while (Iterate()) ;
-        }
+        //public void Begin()
+        //{
+        //    //while (Iterate()) ;
+        //}
     }
 
 }

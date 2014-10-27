@@ -48,8 +48,8 @@ namespace RushHour
                 "......"
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 4;
+            endPoint.x = 4;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -64,8 +64,8 @@ namespace RushHour
                 "hh.k.p"
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 4;
+            endPoint.x = 4;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -80,8 +80,8 @@ namespace RushHour
                 ".gtt.i...zz."
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 10;
+            endPoint.x = 10;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -108,8 +108,8 @@ namespace RushHour
                 ".gtt.i"
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 4;
+            endPoint.x = 4;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -138,8 +138,8 @@ namespace RushHour
                 "............dddeeeq.."
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 7;
+            endPoint.x = 7;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -153,8 +153,8 @@ namespace RushHour
                 "............dddeeeq.."
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 7;
+            endPoint.x = 7;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
 
@@ -168,8 +168,8 @@ namespace RushHour
                 "............dddeeeq.."
             };
             Point endPoint = new Point();
-            endPoint.x = 2;
-            endPoint.y = 19;
+            endPoint.x = 19;
+            endPoint.y = 2;
             return new Input(outputMode, endPoint, use_a_star, map);
         }
     }

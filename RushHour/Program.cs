@@ -9,7 +9,7 @@ namespace RushHour
         {
             //Input input = Input.test_drie(OutputMode.Pretty, false);
             //Input input = Input.test_st(OutputMode.Pretty, false);
-            //Input input = Input.test_fifty(OutputMode.Solve, false);
+            //Input input = Input.test_fifty(OutputMode.Pretty, false);
             //Input input = Input.test_rondje(OutputMode.Pretty, false);
             //Input input = Input.test_kannie(OutputMode.Pretty, false);
             //Input input = Input.test_hard1(OutputMode.Pretty, false);
@@ -21,12 +21,15 @@ namespace RushHour
             //Console.WriteLine(input.gameData);
 
             SolverShared sharedData = new SolverShared(input.gameData);
+            sharedData.Begin();
 
-            SolverTask task = new SolverTask(sharedData);
-            ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate), sharedData.GetNextState());
-            WaitHandle.WaitAll(new ManualResetEvent[] { task.DoneHandle });
+            //SolverTask task = new SolverTask(sharedData);
+            //ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate), sharedData.GetNextState());
+            //WaitHandle.WaitAll(new ManualResetEvent[] { task.DoneHandle });
             
-            task.Begin();
+            
+
+            //task.Begin();
             
             sharedData.PrintSolution();
 

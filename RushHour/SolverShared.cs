@@ -9,12 +9,16 @@ namespace RushHour
         public readonly GameData gameData;
 
         private GameState rootState;
-        private TodoQueue todo;
+        //private TodoQueue todo;
         private ConcurrentTrie visited;
         //private int numVisited = 0;
         //private int round = 0;
+        private int numPendingTasks = 0;
+
         private object solutionLock = new object();
         private GameState solvedState = null;
+
+        private ManualResetEvent doneEvent = new ManualResetEvent(false);
 
         public SolverShared(GameData gameData)
         {
@@ -24,17 +28,10 @@ namespace RushHour
             this.gameData = gameData;
             this.rootState = gameData.startingState;
 
-            if (gameData.use_a_star)
-                todo = new MappedQueueSet(maxSize);
-            else
-                todo = new SingleQueue();
-
-            // test if the first state starts out as solved
-            TestSolved(rootState);
-
-            if (!IsSolved)
-                // no luck, now we have to solve
-                TryPutState(rootState);
+            //if (gameData.use_a_star)
+            //    todo = new MappedQueueSet(maxSize);
+            //else
+            //    todo = new SingleQueue();
         }
 
         // Outputs the result of the solver
@@ -121,22 +118,47 @@ namespace RushHour
             return "";
         }
 
-        public bool TryPutState(GameState state)
+        public void TryPutState(GameState state)
         {
             if (visited.TryPut(state))
             {
+                SolverTask task = new SolverTask(this, state);
+                ThreadPool.QueueUserWorkItem(new WaitCallback(task.Iterate));
+                Interlocked.Increment(ref numPendingTasks);
+
+                //newDoneHandles.Add(task.DoneHandle);
                 //Console.WriteLine(gameData.ToString(state));
-                todo.Put(state, this);
+                //todo.Put(state, this);
                 //Interlocked.Increment(ref numVisited);
-                return true;
+                //return true;
             }
-            return false;
+            //return false;
         }
 
-        public GameState GetNextState()
+        internal void SignalTaskFinished()
         {
-            return todo.TryGet();
+            if (Interlocked.Decrement(ref numPendingTasks) == 0){
+                // done apparently
+                doneEvent.Set();
+            }
         }
+
+        public void Begin()
+        {
+            // test if the first state starts out as solved
+            TestSolved(rootState);
+
+            if (!IsSolved)
+                // no luck, now we have to solve
+                TryPutState(rootState);
+
+            WaitHandle.WaitAll(new ManualResetEvent[] { doneEvent });
+        }
+
+        //public GameState GetNextState()
+        //{
+        //    return todo.TryGet();
+        //}
 
         // Used by A*. Estimates how close to a solution a state is, using a simple measure of the amount of occupied cells in front of 'x' and the distance of 'x' to his goal.
         public int EstimateSolvedness(GameState state)
