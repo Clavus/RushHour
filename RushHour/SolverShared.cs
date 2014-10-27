@@ -160,33 +160,33 @@ namespace RushHour
         // Used by A*. Estimates how close to a solution a state is, using a simple measure of the amount of occupied cells in front of 'x' and the distance of 'x' to his goal.
         public int EstimateSolvedness(GameState state)
         {
-            int distance = gameData.goalPos - state[gameData.targetCar.carArrayIndex];
-
-            // solved
+            int carPos = state[gameData.targetCar.carArrayIndex];
+            int distance = gameData.goalPos - carPos;
             if (distance == 0)
-                return 0;
+                return 0; // this is solved actually
 
             int numBlocked = 0;
-            int index = gameData.targetCar.carLength;
-            int end = index + distance;
-            if (index > end)
-            {
-                int tmp = index;
-                index = end;
-                end = tmp;
+            int start, end;
+            if (distance > 0) {
+                start = carPos + gameData.targetCar.carLength;
+                end = gameData.goalPos + gameData.targetCar.carLength;
+            } else {
+                end = carPos;
+                start = gameData.goalPos;
             }
+
             if (gameData.targetCar.laneOrientation == Orientation.horizontal)
             {
                 int y = gameData.targetCar.laneIndex;
-                for (; index != end; ++index)
-                    if (IsOccupied(index, y, state))
+                for (int x = start; x < end; ++x)
+                    if (IsOccupied(x, y, state))
                         ++numBlocked;
             }
             else
             {
                 int x = gameData.targetCar.laneIndex;
-                for (; index != end; ++index)
-                    if (IsOccupied(x, index, state))
+                for (int y = start; y < end; ++y)
+                    if (IsOccupied(x, y, state))
                         ++numBlocked;
             }
 

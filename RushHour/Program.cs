@@ -12,7 +12,7 @@ namespace RushHour
             //Input input = Input.test_fifty(OutputMode.Pretty, false);
             //Input input = Input.test_rondje(OutputMode.Pretty, false);
             //Input input = Input.test_kannie(OutputMode.Pretty, false);
-            //Input input = Input.test_hard1(OutputMode.Pretty, false);
+            //Input input = Input.test_hard1(OutputMode.Pretty, true);
             //Input input = Input.test_hard2(OutputMode.Pretty, false);
             //Input input = Input.test_hard3(OutputMode.Pretty, true);
             //Input input = Input.test_hard4(OutputMode.Pretty, true);
