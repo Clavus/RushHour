@@ -11,7 +11,9 @@ namespace RushHour
         private GameState rootState;
         private TodoQueue todo;
         private ConcurrentTrie visited;
-        private int numVisited = 0;
+        //private int numVisited = 0;
+        //private int round = 0;
+        private object solutionLock = new object();
         private GameState solvedState = null;
 
         public SolverShared(GameData gameData)
@@ -125,7 +127,7 @@ namespace RushHour
             {
                 //Console.WriteLine(gameData.ToString(state));
                 todo.Put(state, this);
-                Interlocked.Increment(ref numVisited);
+                //Interlocked.Increment(ref numVisited);
             }
         }
 
@@ -206,8 +208,15 @@ namespace RushHour
 
         public void TestSolved(GameState state)
         {
-            if (!IsSolved && state[gameData.targetCar.carArrayIndex] == gameData.goalPos)
-                solvedState = state;
+            if (state[gameData.targetCar.carArrayIndex] == gameData.goalPos)
+            {
+                // it might be possible to have multiple states solved, so lock and check if it's the case, and if so, pick the better
+                lock (solutionLock)
+                {
+                    if (solvedState == null || solvedState.NumPrev > state.NumPrev)
+                        solvedState = state;
+                }
+            }
         }
     }
 

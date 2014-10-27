@@ -63,7 +63,21 @@ namespace RushHour
             return newState;
         }
 
-        public override int NumPrev { get { return -1; } }
+        public override int NumPrev
+        {
+            // count number of ancestors. Only called after solver is done, so it doesn't matter it's not efficient
+            get
+            {
+                int num = 0;
+                GameState ancestor = prevState;
+                while (ancestor != null)
+                {
+                    ancestor = ancestor.PrevState;
+                    ++num;
+                }
+                return num;
+            }
+        }
         public override GameState PrevState { get { return prevState; } }
     }
 }

@@ -53,7 +53,6 @@ namespace RushHour
     {
         void Put(GameState state, SolverShared sharedData);
         GameState TryGet();
-
     }
 
     // Used by A*. Two measures are used, one having priority over the other.
