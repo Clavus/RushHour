@@ -1,0 +1,2 @@
+We hebben de Trie datastructure en ConcurrentQueue gebruikt. De Trie is non-blocking met Interlocked functies, en de ConcurrentQueue is volgens msdn ook non-blocking met Interlocked functies. 
+De voornaamste bottleneck in onze submission is de synchronization stap na ieder depth level. 
